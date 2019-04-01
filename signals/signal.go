@@ -1,10 +1,10 @@
 package signals
 
 import (
-	"bytes"
 	"github.com/wcharczuk/go-chart"
 	"math"
-	"os"
+	"time"
+	"wrg/rts/lab/draws"
 )
 
 type Signal struct {
@@ -49,34 +49,7 @@ func (s *Signal) Count(fromT, toT, nDiscrete float64) {
 }
 
 func (s *Signal) Draw() {
-	graph := chart.Chart{
-		XAxis: chart.XAxis{
-			Style: chart.StyleShow(),
-		},
-		YAxis: chart.YAxis{
-			Style: chart.StyleShow(),
-		},
-
-		Series: []chart.Series{
-			chart.ContinuousSeries{
-				XValues: s.xVals,
-				YValues: s.yVals,
-			},
-		},
-	}
-
-	buffer := bytes.NewBuffer([]byte{})
-	if err := graph.Render(chart.PNG, buffer); err != nil {
-		panic(err)
-	}
-
-	f, err := os.Create("lab1.png")
-	if err != nil {
-		panic(err)
-	}
-	defer f.Close()
-
-	if _, err := buffer.WriteTo(f); err != nil {
+	if err := draws.DrawWith(chart.ContinuousSeries{XValues: s.xVals, YValues: s.xVals}, "lab1.png"); err != nil {
 		panic(err)
 	}
 }
@@ -109,4 +82,19 @@ func (s *Signal) Dispersion() float64 {
 	}
 
 	return mathExp - math.Pow(s.ExpectedValue(), 2)
+}
+
+func (s *Signal) Bench() {
+	xVals, yVals := []float64{}, []float64{}
+
+	for i := 1.0; i <= s.WMax; i++ {
+		xVals = append(xVals, i)
+		tFrom := time.Now()
+		s.Count(0, 1, i)
+		yVals = append(yVals, float64(time.Since(tFrom).Nanoseconds()))
+	}
+
+	if err := draws.DrawWith(chart.ContinuousSeries{XValues: xVals, YValues: yVals}, "bench.png"); err != nil {
+		panic(err)
+	}
 }
