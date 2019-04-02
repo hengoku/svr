@@ -1,16 +1,24 @@
 package main
 
 import (
-	"fmt"
 	"github.com/wcharczuk/go-chart"
 	"math"
-	"time"
 	"wrg/rts/lab/draws"
 	"wrg/rts/lab/signals"
 )
 
 func main() {
-	s := &signals.Signal{
+	s1 := &signals.Signal{
+		WMax: 2100,
+		HNum: 6,
+		Generator: signals.Generator{
+			ABot:  0,
+			ATop:  1,
+			FiBot: 0,
+			FiTop: 2 * math.Pi,
+		},
+	}
+	s2 := &signals.Signal{
 		WMax: 2100,
 		HNum: 6,
 		Generator: signals.Generator{
@@ -21,11 +29,28 @@ func main() {
 		},
 	}
 
-	s.GenerateHarmonics()
-	s.Count(0, 1, 32)
-	s.Draw()
+	s1.GenerateHarmonics()
+	s2.GenerateHarmonics()
+	s1.Count(0, 1, 32)
+	s2.Count(0, 1, 32)
 
-	fmt.Printf("Expected value: %v\nDispersion: %v\n", s.ExpectedValue(), s.Dispersion())
+	xVals, yVals, err := s1.Correlation(s2, 12)
+	if err != nil {
+		panic(err)
+	}
 
-	Bench(s)
+	if err := draws.DrawWith(chart.ContinuousSeries{XValues: xVals, YValues: yVals}, "correlation.png"); err != nil {
+		panic(err)
+	}
+
+	xVals, yVals = s1.AutoCorrelation(12)
+	if err := draws.DrawWith(chart.ContinuousSeries{XValues: xVals, YValues: yVals}, "s1_auto.png"); err != nil {
+		panic(err)
+	}
+
+	xVals, yVals = s2.AutoCorrelation(12)
+	if err := draws.DrawWith(chart.ContinuousSeries{XValues: xVals, YValues: yVals}, "s2_auto.png"); err != nil {
+		panic(err)
+	}
+
 }
