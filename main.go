@@ -31,10 +31,13 @@ func main() {
 
 	s1.GenerateHarmonics()
 	s2.GenerateHarmonics()
-	s1.Count(0, 1, 32)
-	s2.Count(0, 1, 32)
+	s1.Count(0, 512, 1)
+	s2.Count(0, 512, 1)
+	// s2.ChangeNTo(1024)
 
-	xVals, yVals, err := s1.Correlation(s2, 12)
+	s1.Draw()
+
+	xVals, yVals, err := s1.Correlation(s2, 24)
 	if err != nil {
 		panic(err)
 	}

@@ -1,10 +1,8 @@
 package signals
 
 import (
-	"errors"
 	"github.com/wcharczuk/go-chart"
 	"math"
-	"reflect"
 	"time"
 	"wrg/rts/lab/draws"
 )
@@ -21,6 +19,18 @@ type Signal struct {
 	yVals []float64
 }
 
+func (s *Signal) ChangeNTo(nNew int) {
+	if nNew <= len(s.yVals) {
+		return
+	}
+
+	dt := s.xVals[1] - s.xVals[0]
+	for i := len(s.yVals) - 1; i <= nNew; i++ {
+		s.xVals = append(s.xVals, s.xVals[len(s.xVals)-1]+dt)
+		s.yVals = append(s.yVals, 0)
+	}
+}
+
 func (s *Signal) GenerateHarmonics() {
 	s.harmonics = make([]Harmonic, s.HNum)
 	for i := 0; i < s.HNum; i++ {
@@ -32,14 +42,13 @@ func (s *Signal) GenerateHarmonics() {
 	}
 }
 
-func (s *Signal) Count(fromT, toT, nDiscrete float64) {
+func (s *Signal) Count(fromT, toT, timeShift float64) {
 	s.xVals, s.yVals = []float64{}, []float64{}
 
 	// count time shift for each iteration
-	tShift := (toT - fromT) / nDiscrete
 	s.GenerateHarmonics()
 
-	for t := fromT; t <= toT; t += tShift {
+	for t := fromT; t <= toT; t += timeShift {
 		var sum float64
 		for i := 0; i < len(s.harmonics); i++ {
 			sum += s.harmonics[i].Count(t)
@@ -50,7 +59,7 @@ func (s *Signal) Count(fromT, toT, nDiscrete float64) {
 }
 
 func (s *Signal) Draw() {
-	if err := draws.DrawWith(chart.ContinuousSeries{XValues: s.xVals, YValues: s.xVals}, "lab1.png"); err != nil {
+	if err := draws.DrawWith(chart.ContinuousSeries{XValues: s.xVals, YValues: s.yVals}, "lab1.png"); err != nil {
 		panic(err)
 	}
 }
@@ -110,17 +119,20 @@ func (s *Signal) CountAt(t float64) float64 {
 }
 
 func (s *Signal) Correlation(s2 *Signal, maxTau int) ([]float64, []float64, error) {
-	if !reflect.DeepEqual(s.xVals, s2.xVals) {
-		return nil, nil, errors.New("time scales are not equal")
-	}
+	// check time ranges
+	// if !reflect.DeepEqual(s.xVals, s2.xVals) {
+	// 	// if time ranges are not equal,
+	//
+	// 	return nil, nil, errors.New("time ranges are not equal")
+	// }
 
 	var xVals []float64
 	var yVals []float64
 
-	for tau := 1; tau <= maxTau; tau++ {
+	for tau := 0; tau <= maxTau; tau++ {
 		result := 0.0
-		for i := 0; i < len(s.yVals); i++ {
-			result += (s.yVals[i] - s.ExpectedValue()) * (s2.CountAt(s2.xVals[i]+float64(tau)) - s2.ExpectedValue())
+		for i := 0; i < len(s2.yVals); i++ {
+			result += (s.CountAt(float64(i)) - s.ExpectedValue()) * (s2.CountAt(s2.xVals[i]+float64(tau)) - s2.ExpectedValue())
 		}
 
 		xVals = append(xVals, float64(tau))
@@ -134,7 +146,7 @@ func (s *Signal) AutoCorrelation(maxTau int) ([]float64, []float64) {
 	var xVals []float64
 	var yVals []float64
 
-	for tau := 1; tau <= maxTau; tau++ {
+	for tau := 0; tau <= maxTau; tau++ {
 		res := 0.0
 		for i := 0; i < len(s.xVals); i++ {
 			res += s.yVals[i] * s.CountAt(s.xVals[i]+float64(tau))
