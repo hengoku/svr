@@ -7,6 +7,7 @@ import (
 )
 
 func DrawWith(filename string, series ...chart.Series) error {
+	filename = "img/" + filename
 	graph := chart.Chart{
 		XAxis: chart.XAxis{
 			Style: chart.StyleShow(),
