@@ -3,6 +3,7 @@ package signals
 import (
 	"github.com/wcharczuk/go-chart"
 	"math"
+	"math/cmplx"
 	"time"
 	"wrg/rts/lab/draws"
 )
@@ -17,6 +18,10 @@ type Signal struct {
 
 	xVals []float64
 	yVals []float64
+}
+
+func (s *Signal) YVals() []float64 {
+	return s.yVals
 }
 
 func (s *Signal) ChangeNTo(nNew int) {
@@ -48,7 +53,7 @@ func (s *Signal) Count(fromT, toT, timeShift float64) {
 	// count time shift for each iteration
 	s.GenerateHarmonics()
 
-	for t := fromT; t <= toT; t += timeShift {
+	for t := fromT; t < toT; t += timeShift {
 		var sum float64
 		for i := 0; i < len(s.harmonics); i++ {
 			sum += s.harmonics[i].Count(t)
@@ -59,7 +64,7 @@ func (s *Signal) Count(fromT, toT, timeShift float64) {
 }
 
 func (s *Signal) Draw() {
-	if err := draws.DrawWith(chart.ContinuousSeries{XValues: s.xVals, YValues: s.yVals}, "lab1.png"); err != nil {
+	if err := draws.DrawWith("lab1.png", chart.ContinuousSeries{XValues: s.xVals, YValues: s.yVals}); err != nil {
 		panic(err)
 	}
 }
@@ -104,7 +109,7 @@ func (s *Signal) Bench() {
 		yVals = append(yVals, float64(time.Since(tFrom).Nanoseconds()))
 	}
 
-	if err := draws.DrawWith(chart.ContinuousSeries{XValues: xVals, YValues: yVals}, "bench.png"); err != nil {
+	if err := draws.DrawWith("bench.png", chart.ContinuousSeries{XValues: xVals, YValues: yVals}); err != nil {
 		panic(err)
 	}
 }
@@ -119,13 +124,6 @@ func (s *Signal) CountAt(t float64) float64 {
 }
 
 func (s *Signal) Correlation(s2 *Signal, maxTau int) ([]float64, []float64, error) {
-	// check time ranges
-	// if !reflect.DeepEqual(s.xVals, s2.xVals) {
-	// 	// if time ranges are not equal,
-	//
-	// 	return nil, nil, errors.New("time ranges are not equal")
-	// }
-
 	var xVals []float64
 	var yVals []float64
 
@@ -160,4 +158,59 @@ func (s *Signal) AutoCorrelation(maxTau int) ([]float64, []float64) {
 	}
 
 	return xVals, yVals
+}
+
+func (s *Signal) DFTSimple() []complex128 {
+	results := make([]complex128, len(s.yVals))
+	arg := -2.0 * math.Pi / float64(len(s.yVals))
+	for k := 0; k < len(s.yVals); k++ {
+		var res complex128
+		for n := 0; n < len(s.yVals); n++ {
+			res += complex(s.yVals[n]*math.Cos(arg*float64(n)*float64(k)), s.yVals[n]*math.Sin(arg*float64(n)*float64(k)))
+		}
+		results[k] = res
+	}
+
+	return results
+}
+
+func (s *Signal) DFTFast() []complex128 {
+	n := len(s.yVals)
+	x := toComplex(s.yVals)
+
+	j := 0
+	for i := 0; i < n; i++ {
+		if i < j {
+			x[i], x[j] = x[j], x[i]
+		}
+		m := n / 2
+		for {
+			if j < m {
+				break
+			}
+			j = j - m
+			m = m / 2
+			if m < 2 {
+				break
+			}
+		}
+		j = j + m
+	}
+	kmax := 1
+	for {
+		if kmax >= n {
+			return x
+		}
+		istep := kmax * 2
+		for k := 0; k < kmax; k++ {
+			theta := complex(0.0, -1.0*math.Pi*float64(k)/float64(kmax))
+			for i := k; i < n; i += istep {
+				j := i + kmax
+				temp := x[j] * cmplx.Exp(theta)
+				x[j] = x[i] - temp
+				x[i] = x[i] + temp
+			}
+		}
+		kmax = istep
+	}
 }

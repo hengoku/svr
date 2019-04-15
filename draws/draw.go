@@ -6,7 +6,7 @@ import (
 	"os"
 )
 
-func DrawWith(series chart.Series, filename string) error {
+func DrawWith(filename string, series ...chart.Series) error {
 	graph := chart.Chart{
 		XAxis: chart.XAxis{
 			Style: chart.StyleShow(),
@@ -15,7 +15,7 @@ func DrawWith(series chart.Series, filename string) error {
 			Style: chart.StyleShow(),
 		},
 
-		Series: []chart.Series{series},
+		Series: series,
 	}
 
 	buffer := bytes.NewBuffer([]byte{})
