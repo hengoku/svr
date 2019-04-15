@@ -90,8 +90,6 @@ func CollectBenchmarks(s *signals.Signal, n int) {
 		panic(err)
 	}
 
-	bMap.libY[100] = 390.00
-
 	if err := draws.DrawWith("bench.png",
 		chart.ContinuousSeries{XValues: bMap.simpleX, YValues: bMap.simpleY, Name: "DFT"},
 		chart.ContinuousSeries{XValues: bMap.fastX, YValues: bMap.fastY, Name: "FFT"},
