@@ -1,9 +1,7 @@
 FROM golang:1.11
 
-WORKDIR /go/src/wrg/rts/lab/
+WORKDIR /svr/
 COPY . .
-
-RUN go get ./...
 
 RUN go build main.go
 

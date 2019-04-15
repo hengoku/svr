@@ -4,9 +4,9 @@ import (
 	"github.com/mjibson/go-dsp/fft"
 	"github.com/wcharczuk/go-chart"
 	"math"
+	"svr/draws"
+	"svr/signals"
 	"time"
-	"wrg/rts/lab/draws"
-	"wrg/rts/lab/signals"
 )
 
 func main() {
