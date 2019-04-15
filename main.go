@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	s := &signals.Signal{
+	s1 := &signals.Signal{
 		WMax: 2100,
 		HNum: 6,
 		Generator: signals.Generator{
@@ -21,7 +21,36 @@ func main() {
 		},
 	}
 
-	CollectBenchmarks(s, 128)
+	s2 := &signals.Signal{
+		WMax: 2100,
+		HNum: 6,
+		Generator: signals.Generator{
+			ABot:  0,
+			ATop:  1,
+			FiBot: 0,
+			FiTop: 2 * math.Pi,
+		},
+	}
+
+	s1.Count(0, 1024, 1)
+	s2.Count(0, 1024, 1)
+
+	xVals, yVals, err := s1.Correlation(s2, 100)
+	if err != nil {
+		panic(err)
+	}
+
+	draws.DrawWith("correlation.png", chart.Series(chart.ContinuousSeries{
+		XValues: xVals,
+		YValues: yVals,
+	}))
+
+	xVals, yVals = s1.AutoCorrelation(100)
+	draws.DrawWith("auto.png", chart.Series(chart.ContinuousSeries{
+		XValues: xVals,
+		YValues: yVals,
+	}))
+
 }
 
 type BenchMap struct {
@@ -44,10 +73,6 @@ func NewBenchMap(n int) *BenchMap {
 		make([]float64, n),
 		make([]float64, n),
 	}
-}
-
-func DrawFourier() {
-
 }
 
 func CollectBenchmarks(s *signals.Signal, n int) {

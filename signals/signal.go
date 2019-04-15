@@ -127,14 +127,18 @@ func (s *Signal) Correlation(s2 *Signal, maxTau int) ([]float64, []float64, erro
 	var xVals []float64
 	var yVals []float64
 
+	sExp := s.ExpectedValue()
+	s2Exp := s2.ExpectedValue()
+	div := float64(len(s.xVals) - 1)
+
 	for tau := 0; tau <= maxTau; tau++ {
 		result := 0.0
 		for i := 0; i < len(s2.yVals); i++ {
-			result += (s.CountAt(float64(i)) - s.ExpectedValue()) * (s2.CountAt(s2.xVals[i]+float64(tau)) - s2.ExpectedValue())
+			result += (s.CountAt(float64(i)) - sExp) * (s2.CountAt(s2.xVals[i]+float64(tau)) - s2Exp)
 		}
 
 		xVals = append(xVals, float64(tau))
-		yVals = append(yVals, result/float64(len(s.xVals)-1))
+		yVals = append(yVals, result/div)
 	}
 
 	return xVals, yVals, nil
