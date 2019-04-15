@@ -22,6 +22,10 @@ func DrawWith(filename string, series ...chart.Series) error {
 		Series: series,
 	}
 
+	graph.Elements = []chart.Renderable{
+		chart.Legend(&graph),
+	}
+
 	buffer := bytes.NewBuffer([]byte{})
 	if err := graph.Render(chart.PNG, buffer); err != nil {
 		return err

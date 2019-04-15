@@ -166,7 +166,10 @@ func (s *Signal) DFTSimple() []complex128 {
 	for k := 0; k < len(s.yVals); k++ {
 		var res complex128
 		for n := 0; n < len(s.yVals); n++ {
-			res += complex(s.yVals[n]*math.Cos(arg*float64(n)*float64(k)), s.yVals[n]*math.Sin(arg*float64(n)*float64(k)))
+			real := s.yVals[n] * math.Cos(arg*float64(n)*float64(k))
+			img := s.yVals[n] * math.Sin(arg*float64(n)*float64(k))
+
+			res += complex(real, img)
 		}
 		results[k] = res
 	}

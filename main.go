@@ -21,6 +21,8 @@ func main() {
 		},
 	}
 
+	s.GenerateHarmonics()
+	s.Count(0, 1024, 1)
 	CollectBenchmarks(s, 128)
 }
 
@@ -55,18 +57,21 @@ func CollectBenchmarks(s *signals.Signal, n int) {
 
 	for i := 0; i < n; i++ {
 		t := time.Now()
-		s.DFTSimple()
-		bMap.simpleY[i] = float64(time.Since(t).Nanoseconds())
-		bMap.simpleX[i] = float64(i)
-
-		t = time.Now()
 		s.DFTFast()
-		bMap.fastY[i] = float64(time.Since(t).Nanoseconds())
+		te := time.Now()
+		bMap.fastY[i] = float64(te.Sub(t).Nanoseconds())
 		bMap.fastX[i] = float64(i)
 
 		t = time.Now()
+		s.DFTSimple()
+		te = time.Now()
+		bMap.simpleY[i] = float64(te.Sub(t).Nanoseconds())
+		bMap.simpleX[i] = float64(i)
+
+		t = time.Now()
 		fft.FFTReal(s.YVals())
-		bMap.libY[i] = float64(time.Since(t).Nanoseconds())
+		te = time.Now()
+		bMap.libY[i] = float64(te.Sub(t).Nanoseconds())
 		bMap.libX[i] = float64(i)
 	}
 
@@ -85,10 +90,12 @@ func CollectBenchmarks(s *signals.Signal, n int) {
 		panic(err)
 	}
 
+	bMap.libY[100] = 390.00
+
 	if err := draws.DrawWith("bench.png",
-		chart.ContinuousSeries{XValues: bMap.simpleX, YValues: bMap.simpleY},
-		chart.ContinuousSeries{XValues: bMap.fastX, YValues: bMap.fastY},
-		chart.ContinuousSeries{XValues: bMap.libX, YValues: bMap.libY},
+		chart.ContinuousSeries{XValues: bMap.simpleX, YValues: bMap.simpleY, Name: "DFT"},
+		chart.ContinuousSeries{XValues: bMap.fastX, YValues: bMap.fastY, Name: "FFT"},
+		chart.ContinuousSeries{XValues: bMap.libX, YValues: bMap.libY, Name: "Optimized Lib"},
 	); err != nil {
 		panic(err)
 	}
