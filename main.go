@@ -22,8 +22,7 @@ func main() {
 	}
 
 	s.GenerateHarmonics()
-	s.Count(0, 1024, 1)
-	CollectBenchmarks(s, 128)
+	CollectBenchmarks(100, 1000, 100, s)
 }
 
 type BenchMap struct {
@@ -52,27 +51,44 @@ func DrawFourier() {
 
 }
 
-func CollectBenchmarks(s *signals.Signal, n int) {
-	bMap := NewBenchMap(n)
+func CollectBenchmarks(from, to, step int, s *signals.Signal) {
+	n := 11
+	bMap := NewBenchMap(to / step)
+	j := 0
+	for i := from; i <= to; i += step {
 
-	for i := 0; i < n; i++ {
+		s := &signals.Signal{
+			WMax: 2100,
+			HNum: 6,
+			Generator: signals.Generator{
+				ABot:  0,
+				ATop:  1,
+				FiBot: 0,
+				FiTop: 2 * math.Pi,
+			},
+		}
+
+		s.GenerateHarmonics()
+		s.Count(0, float64(i), 1)
+
 		t := time.Now()
-		s.DFTFast()
-		te := time.Now()
-		bMap.fastY[i] = float64(te.Sub(t).Nanoseconds())
-		bMap.fastX[i] = float64(i)
-
-		t = time.Now()
 		s.DFTSimple()
-		te = time.Now()
-		bMap.simpleY[i] = float64(te.Sub(t).Nanoseconds())
-		bMap.simpleX[i] = float64(i)
+		te := time.Now()
+		bMap.fastY[j] = float64(te.Sub(t).Nanoseconds())
+		bMap.fastX[j] = float64(i)
 
 		t = time.Now()
 		fft.FFTReal(s.YVals())
 		te = time.Now()
-		bMap.libY[i] = float64(te.Sub(t).Nanoseconds())
-		bMap.libX[i] = float64(i)
+		bMap.simpleY[j] = float64(te.Sub(t).Nanoseconds())
+		bMap.simpleX[j] = float64(i)
+
+		// t = time.Now()
+		// fft.FFTReal(s.YVals())
+		// te = time.Now()
+		// bMap.libY[j] = float64(te.Sub(t).Nanoseconds())
+		// bMap.libX[j] = float64(j)
+		j++
 	}
 
 	chartX := make([]float64, n)
@@ -93,7 +109,6 @@ func CollectBenchmarks(s *signals.Signal, n int) {
 	if err := draws.DrawWith("bench.png",
 		chart.ContinuousSeries{XValues: bMap.simpleX, YValues: bMap.simpleY, Name: "DFT"},
 		chart.ContinuousSeries{XValues: bMap.fastX, YValues: bMap.fastY, Name: "FFT"},
-		chart.ContinuousSeries{XValues: bMap.libX, YValues: bMap.libY, Name: "Optimized Lib"},
 	); err != nil {
 		panic(err)
 	}
