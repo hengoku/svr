@@ -51,6 +51,12 @@ func main() {
 		YValues: yVals,
 	}))
 
+	xVals, yVals = BenchCorrelation(100, 1000, 100, s1, s2)
+	draws.DrawWith("bench_corr.png", chart.Series(chart.ContinuousSeries{
+		XValues: xVals,
+		YValues: yVals,
+	}))
+
 }
 
 type BenchMap struct {
@@ -62,6 +68,22 @@ type BenchMap struct {
 
 	libX []float64
 	libY []float64
+}
+
+func BenchCorrelation(from, to, step int, s1, s2 *signals.Signal) ([]float64, []float64) {
+	var xVals, yVals = []float64{}, []float64{}
+
+	for i := from; i < to; i += step {
+		s1.Count(0, float64(i), 1)
+		s2.Count(0, float64(i), 1)
+		t := time.Now()
+		s1.Correlation(s2, 100)
+		te := time.Now()
+		xVals = append(xVals, float64(i))
+		yVals = append(yVals, float64(te.Sub(t).Nanoseconds()))
+	}
+
+	return xVals, yVals
 }
 
 func NewBenchMap(n int) *BenchMap {
