@@ -3,5 +3,5 @@
     $ docker build . -t svr
     $ docker run --name=svr svr:latest 
     ### copy images 
-    $ docker cp svr:/go/src/wrg/rts/lab/img/ ~/kek
+    $ docker cp svr:/svr/img ~/kek
 

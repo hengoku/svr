@@ -4,8 +4,8 @@ import (
 	"github.com/wcharczuk/go-chart"
 	"math"
 	"math/cmplx"
+	"svr/draws"
 	"time"
-	"wrg/rts/lab/draws"
 )
 
 type Signal struct {
