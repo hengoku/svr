@@ -72,13 +72,13 @@ func CollectBenchmarks(from, to, step int, s *signals.Signal) {
 		s.Count(0, float64(i), 1)
 
 		t := time.Now()
-		s.DFTSimple()
+		fft.FFTReal(s.YVals())
 		te := time.Now()
 		bMap.fastY[j] = float64(te.Sub(t).Nanoseconds())
 		bMap.fastX[j] = float64(i)
 
 		t = time.Now()
-		fft.FFTReal(s.YVals())
+		s.DFTSimple()
 		te = time.Now()
 		bMap.simpleY[j] = float64(te.Sub(t).Nanoseconds())
 		bMap.simpleX[j] = float64(i)
